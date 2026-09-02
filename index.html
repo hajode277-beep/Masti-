@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#09090f">
+  <title>Masti TV Drama</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --bg: #08080c; --surface: #1a1a23; --surface2: #0b0b10; --surface3: #ffffff08;
+      --text: #f0f0f0; --muted: #6b7280; --pink: #ff315c; --purple: #8e2de2;
+      --danger: #ef4444; --green: #22c55e;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    button, input, textarea, select { font: inherit; outline: none; border: none; }
+    button { cursor: pointer; background: none; }
+    img { max-width: 100%; display: block; }
+    .hidden { display: none !important; }
+
+    /* LOADER & SPLASH */
+    #splash { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s, visibility 0.5s; }
+    #splash.hide { opacity: 0; visibility: hidden; }
+    .splash-logo { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: grid; place-items: center; font-size: 40px; margin: 0 auto 15px; box-shadow: 0 10px 40px rgba(255, 49, 92, 0.4); font-weight: 900; font-style: italic; }
+    .splash-text { text-align: center; font-size: 32px; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: -0.05em; }
+    
+    #loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9998; display: none; place-items: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--surface3); border-top-color: var(--pink); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #ffffff; color: #000; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 10000; white-space: nowrap; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+    /* LAYOUT & PAGES */
+    .app-container { width: 100%; max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 70px; }
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .container { padding: 20px; }
+    
+    /* HEADER */
+    .topbar { position: sticky; top: 0; z-index: 100; padding: 15px 20px; background: rgba(8,8,12,0.85); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .brand { font-size: 24px; font-weight: 900; font-style: italic; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: -0.05em; }
+    .brand-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: grid; place-items: center; font-size: 16px; font-style: normal; }
+    .search-input { flex: 1; background: rgba(255,255,255,0.05); color: white; padding: 10px 15px; border-radius: 999px; font-size: 14px; border: 1px solid transparent; }
+    
+    /* BOTTOM NAV */
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); background: #0b0b10; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; z-index: 500; }
+    .nav-item { color: #6b7280; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 15px; border-radius: 12px; }
+    .nav-item.active { color: white; background: rgba(255,255,255,0.05); }
+    .nav-item.active .nav-icon { color: var(--pink); }
+    .nav-icon { font-size: 20px; font-style: normal; }
+    
+    /* COMPONENTS */
+    .btn-primary { width: 100%; padding: 14px; border-radius: 999px; color: white; font-weight: 900; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; background: linear-gradient(135deg, var(--pink), var(--purple)); box-shadow: 0 8px 25px rgba(255, 49, 92, 0.3); }
+    .btn-secondary { width: 100%; padding: 14px; border-radius: 999px; color: white; font-weight: 900; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+    .btn-danger { background: rgba(255, 49, 92, 0.1); color: var(--pink); padding: 8px 16px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    
+    .section-title { font-size: 24px; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 30px 0 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .section-title span { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); font-style: normal; }
+    
+    .categories { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; margin-bottom: 10px; }
+    .categories::-webkit-scrollbar { display: none; }
+    .category-chip { padding: 8px 0; color: #6b7280; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; border-bottom: 2px solid transparent; border-radius: 0; cursor: pointer; }
+    .category-chip.active { color: var(--pink); border-bottom-color: var(--pink); background: transparent; }
+    
+    /* DRAMA GRID */
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .drama-card { cursor: pointer; display: flex; flex-direction: column; gap: 8px; }
+    .poster-box { position: relative; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; background: var(--surface); }
+    .poster-box img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(15%); transition: transform 0.3s; }
+    .drama-card:hover .poster-box img { transform: scale(1.05); }
+    .hot-badge { position: absolute; top: 12px; left: 12px; background: var(--pink); padding: 4px 8px; border-radius: 4px; font-size: 9px; font-weight: 900; font-style: italic; color: white; letter-spacing: 0.05em; border: none; }
+    .drama-info { padding: 4px 0; }
+    .drama-title { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; line-height: 1.2; }
+    .drama-meta { font-size: 10px; color: var(--muted); font-weight: 500; display: flex; gap: 8px; }
+    
+    /* DETAILS HERO */
+    .details-hero { display: grid; grid-template-columns: 140px 1fr; gap: 20px; margin-bottom: 24px; }
+    .details-poster { aspect-ratio: 3/4; border-radius: 16px; object-fit: cover; width: 100%; background: var(--surface); filter: grayscale(15%); }
+    .details-info h1 { font-size: 28px; font-weight: 900; font-style: italic; text-transform: uppercase; line-height: 1.1; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .details-tags { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; color: var(--muted); }
+    .details-desc { font-size: 13px; color: #d1d5db; line-height: 1.6; }
+    
+    /* EPISODE LIST */
+    .episode-card { display: flex; align-items: center; gap: 16px; background: var(--surface); padding: 16px; border-radius: 16px; margin-bottom: 12px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+    .episode-card:active { border-color: var(--pink); background: rgba(255,255,255,0.05); }
+    .ep-num { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.05); display: grid; place-items: center; font-weight: 900; font-size: 14px; flex-shrink: 0; font-style: italic; }
+    .ep-info { flex: 1; min-width: 0; }
+    .ep-title { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .ep-meta { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .ep-free { color: var(--green); }
+    .ep-premium { color: var(--pink); }
+    .ep-play { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); display: grid; place-items: center; font-size: 12px; flex-shrink: 0; }
+    
+    /* VIDEO PLAYER */
+    .video-wrapper { background: #000; border-radius: 20px; overflow: hidden; margin: 15px 0 20px; aspect-ratio: 16/9; }
+    video { width: 100%; height: 100%; display: block; object-fit: contain; }
+    .now-playing { font-size: 20px; font-weight: 900; font-style: italic; text-transform: uppercase; margin-bottom: 6px; }
+    
+    /* AUTH & FORMS */
+    .auth-box { background: var(--surface); padding: 32px 24px; border-radius: 24px; text-align: center; margin-top: 40px; }
+    .auth-box h2 { font-size: 28px; font-weight: 900; font-style: italic; text-transform: uppercase; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; text-align: left; }
+    .form-label { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.08); font-size: 14px; }
+    .form-input:focus { border-color: var(--pink); background: rgba(255,255,255,0.05); }
+    .auth-switch { margin-top: 24px; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .auth-switch span { color: var(--pink); font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    /* PROFILE & MEMBERSHIP */
+    .profile-card { background: var(--surface); padding: 24px; border-radius: 24px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--purple)); display: grid; place-items: center; font-size: 24px; font-weight: 900; font-style: italic; }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 20px; font-weight: 900; font-style: italic; text-transform: uppercase; margin-bottom: 4px; }
+    .profile-email { font-size: 12px; color: var(--muted); font-weight: 500; }
+    
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .stat-box { background: var(--surface); padding: 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: flex-start; }
+    .stat-val { font-size: 28px; font-weight: 900; font-style: italic; margin-bottom: 4px; color: white; }
+    .stat-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+    
+    .premium-card { background: linear-gradient(to bottom right, #1a1a23, #0b0b10); border: 1px solid rgba(255,255,255,0.08); padding: 32px 24px; border-radius: 24px; text-align: center; margin-bottom: 24px; }
+    .premium-card h2 { font-size: 24px; font-weight: 900; font-style: italic; text-transform: uppercase; margin-bottom: 12px; }
+    .premium-features { text-align: left; margin: 24px 0; font-size: 13px; line-height: 1.8; color: #d1d5db; font-weight: 500; }
+    .premium-features li { list-style: none; display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+    
+    /* ADMIN */
+    .admin-card { background: var(--surface); padding: 24px; border-radius: 24px; margin-bottom: 24px; }
+    .admin-card h3 { font-size: 18px; font-weight: 900; font-style: italic; text-transform: uppercase; margin-bottom: 20px; }
+    .admin-list-item { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .admin-list-item img { width: 48px; height: 64px; border-radius: 8px; object-fit: cover; filter: grayscale(15%); }
+    
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  </style>
+</head>
+<body>
+
+  <!-- SPLASH SCREEN -->
+  <div id="splash">
+    <div>
+      <div class="splash-logo">▶</div>
+      <div class="splash-text">Masti TV</div>
+    </div>
+  </div>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <!-- APP CONTAINER -->
+  <div class="app-container">
+    
+    <!-- TOPBAR (Visible only on some pages) -->
+    <header id="topbar" class="topbar hidden">
+      <div class="brand">
+        <div class="brand-icon">▶</div>
+        Masti TV
+      </div>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search dramas...">
+    </header>
+
+    <!-- PAGE: AUTH -->
+    <section id="page-auth" class="page active">
+      <div class="container">
+        <!-- LOGIN -->
+        <div id="loginBox" class="auth-box">
+          <h2>Welcome Back</h2>
+          <form id="loginForm">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="loginEmail" class="form-input" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">Password</label>
+              <input type="password" id="loginPassword" class="form-input" required>
+            </div>
+            <div style="text-align: right; margin-bottom: 20px;">
+              <span style="font-size: 11px; color: var(--pink); cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;" onclick="handleForgotPassword()">Forgot Password?</span>
+            </div>
+            <button type="submit" class="btn-primary">Login</button>
+          </form>
+          <div class="auth-switch">Don't have an account? <span onclick="toggleAuth()">Sign up</span></div>
+        </div>
+
+        <!-- SIGNUP -->
+        <div id="signupBox" class="auth-box hidden">
+          <h2>Create Account</h2>
+          <form id="signupForm">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="signupName" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="signupEmail" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="signupPassword" class="form-input" required minlength="6">
+            </div>
+            <button type="submit" class="btn-primary">Sign Up</button>
+          </form>
+          <div class="auth-switch">Already have an account? <span onclick="toggleAuth()">Login</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: HOME -->
+    <section id="page-home" class="page">
+      <div class="container" style="padding-top: 10px;">
+        <div class="categories" id="categoryTabs">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div class="section-title">
+          <h2 id="homeSectionTitle">Trending Dramas</h2>
+          <span id="dramaCount">0 titles</span>
+        </div>
+
+        <div class="grid" id="dramaGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: DETAILS -->
+    <section id="page-details" class="page">
+      <div class="container">
+        <button class="btn-secondary" style="width: auto; padding: 10px 15px; margin-bottom: 20px;" onclick="goBack('page-home')">← Back</button>
+        
+        <div class="details-hero">
+          <img src="" id="detPoster" class="details-poster" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/600x850/1a1a23/6b7280?text=No+Image'">
+          <div class="details-info">
+            <h1 id="detTitle">Drama Title</h1>
+            <div class="details-tags">
+              <span class="tag" id="detCategory">Category</span>
+              <span class="tag" id="detGenre">Genre</span>
+              <span class="tag">👁 <span id="detViews">0</span></span>
+            </div>
+            <p class="details-desc" id="detDesc">Description goes here.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:30px;">
+          <button class="btn-primary" onclick="playFirstEpisode()" style="flex:2;">▶ Play</button>
+          <button class="btn-secondary" id="btnToggleList" onclick="toggleMyList()" style="flex:1;">+ List</button>
+        </div>
+
+        <div class="section-title">
+          <h2>Episodes</h2>
+          <span id="epCount">0 total</span>
+        </div>
+        <div id="episodeList">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: WATCH -->
+    <section id="page-watch" class="page">
+      <div class="container">
+        <button class="btn-secondary" style="width: auto; padding: 10px 15px; margin-bottom: 10px;" onclick="goBack('page-details')">← Episodes</button>
+        
+        <div class="video-wrapper">
+          <video id="videoPlayer" controls playsinline></video>
+        </div>
+        
+        <h2 class="now-playing" id="watchTitle">Episode Title</h2>
+        <p class="details-desc" style="margin-bottom:20px;" id="watchDramaName">Drama Name</p>
+
+        <div class="section-title"><h2>Up Next</h2></div>
+        <div id="upNextList">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: MY LIST -->
+    <section id="page-mylist" class="page">
+      <div class="container">
+        <div class="section-title"><h2>My List</h2></div>
+        <div class="grid" id="myListGrid"></div>
+      </div>
+    </section>
+
+    <!-- PAGE: HISTORY -->
+    <section id="page-history" class="page">
+      <div class="container">
+        <div class="section-title"><h2>Watch History</h2></div>
+        <div class="grid" id="historyGrid"></div>
+      </div>
+    </section>
+
+    <!-- PAGE: PROFILE & MEMBERSHIP -->
+    <section id="page-profile" class="page">
+      <div class="container">
+        <div class="section-title"><h2>Profile</h2></div>
+        
+        <div class="profile-card">
+          <div class="avatar" id="profAvatar">U</div>
+          <div class="profile-info">
+            <div class="profile-name" id="profName">User Name</div>
+            <div class="profile-email" id="profEmail">user@email.com</div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-val" id="profCoins">0</div>
+            <div class="stat-label">Coins</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="profMembership" style="font-size:18px;">Free</div>
+            <div class="stat-label">Membership</div>
+          </div>
+        </div>
+
+        <div class="premium-card">
+          <h2>💎 VIP Membership</h2>
+          <p class="details-desc">Unlock all premium episodes instantly!</p>
+          <ul class="premium-features">
+            <li>✓ Watch all exclusive premium short dramas</li>
+            <li>✓ No ads interruption</li>
+            <li>✓ Support the creators</li>
+          </ul>
+          <button class="btn-primary" onclick="activateMembershipDemo()">Activate Demo VIP</button>
+          <p style="font-size:10px; color:#999; margin-top:10px;">(This is a demo, no real payment)</p>
+        </div>
+
+        <button id="btnAdminPanel" class="btn-secondary hidden" style="margin-bottom:15px; color:#ffca28;" onclick="switchPage('page-admin')">⚙️ Open Admin Panel</button>
+        <button class="btn-secondary" style="background: rgba(255,255,255,0.05);" onclick="logout()">Sign Out</button>
+      </div>
+    </section>
+
+    <!-- PAGE: ADMIN PANEL -->
+    <section id="page-admin" class="page">
+      <div class="container">
+        <button class="btn-secondary" style="width: auto; padding: 10px 15px; margin-bottom: 20px;" onclick="goBack('page-profile')">← Back to Profile</button>
+        
+        <div class="section-title"><h2>Admin Panel</h2></div>
+        
+        <div class="admin-card">
+          <h3 style="margin-bottom:15px;">Add New Drama</h3>
+          <form id="formAddDrama">
+            <div class="form-group">
+              <label class="form-label">Title</label>
+              <input type="text" id="aTitle" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea id="aDesc" class="form-input" style="height:80px;" required></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category (e.g. Popular, Romance, Action)</label>
+              <input type="text" id="aCat" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Genre</label>
+              <input type="text" id="aGenre" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Poster URL</label>
+              <input type="url" id="aPoster" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Initial Views Count</label>
+              <input type="number" id="aViews" class="form-input" value="1000" required>
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" id="aHot" style="width:18px; height:18px;">
+              <label class="form-label" style="margin:0;">Mark as Hot 🔥</label>
+            </div>
+            <button type="submit" class="btn-primary">Add Drama</button>
+          </form>
+        </div>
+
+        <div class="admin-card">
+          <h3 style="margin-bottom:15px;">Add Episode to Drama</h3>
+          <form id="formAddEpisode">
+            <div class="form-group">
+              <label class="form-label">Select Drama</label>
+              <select id="aeDramaId" class="form-input" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Episode Number</label>
+              <input type="number" id="aeNum" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Episode Title</label>
+              <input type="text" id="aeTitle" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Video URL (MP4/WebM)</label>
+              <input type="url" id="aeVideo" class="form-input" required>
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" id="aeFree" checked style="width:18px; height:18px;">
+              <label class="form-label" style="margin:0;">Is Free Episode?</label>
+            </div>
+            <button type="submit" class="btn-primary">Add Episode</button>
+          </form>
+        </div>
+
+        <div class="section-title"><h2>Manage Catalog</h2></div>
+        <div class="admin-card" id="adminCatalogList" style="padding:10px;">
+          <!-- Rendered by JS -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- BOTTOM NAV -->
+    <nav id="bottomNav" class="bottom-nav hidden">
+      <div class="nav-item active" onclick="switchPage('page-home')" id="nav-page-home">
+        <span class="nav-icon">🏠</span>
+        Home
+      </div>
+      <div class="nav-item" onclick="switchPage('page-mylist')" id="nav-page-mylist">
+        <span class="nav-icon">❤️</span>
+        My List
+      </div>
+      <div class="nav-item" onclick="switchPage('page-history')" id="nav-page-history">
+        <span class="nav-icon">🕘</span>
+        History
+      </div>
+      <div class="nav-item" onclick="switchPage('page-profile')" id="nav-page-profile">
+        <span class="nav-icon">👤</span>
+        Profile
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- 
+  ============================================================
+  FIREBASE CONFIG SECTION
+  Paste your Firebase config here
+  ============================================================ 
+  -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPZqQ0bTH6BIrHouZBAcng3pRo_r27XZ0",
+      authDomain: "masti-tv-789b5.firebaseapp.com",
+      projectId: "masti-tv-789b5",
+      storageBucket: "masti-tv-789b5.firebasestorage.app",
+      messagingSenderId: "369598356934",
+      appId: "1:369598356934:web:a3d5cd4600006e197e66c7"
+    };
+
+    // ============================================================
+    // ADMIN ACCESS
+    // Replace this with your admin email
+    // ============================================================
+    const ADMIN_EMAIL = "blackgamer1gmr@gmail.com";
+
+    const firebaseConfigured = firebaseConfig.apiKey !== "PASTE_YOUR_API_KEY";
+
+    let app, auth, db;
+    if (firebaseConfigured) {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    }
+
+    // STATE
+    let currentUser = null;
+    let userProfile = { membership: "free" };
+    let dramas = [];
+    let myList = [];
+    let watchHistory = [];
+    let currentCategory = "Popular";
+    let activeDramaId = null;
+    let activeEpisodeId = null;
+    let navHistory = [];
+
+    // DOM UTILS
+    const $ = id => document.getElementById(id);
+    const showLoading = (show) => $("loader").style.display = show ? "grid" : "none";
+    const escapeHTML = (str) => String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+    
+    window.showToast = (msg) => {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3000);
+    };
+
+    window.switchPage = (pageId) => {
+      if(!currentUser && pageId !== 'page-auth') {
+        pageId = 'page-auth';
+      }
+      
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      $(pageId).classList.add("active");
+      
+      // Update Bottom Nav
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      if($(`nav-${pageId}`)) $(`nav-${pageId}`).classList.add("active");
+
+      // Show/Hide Topbar & Bottom Nav
+      const isMainPage = ['page-home', 'page-mylist', 'page-history', 'page-profile'].includes(pageId);
+      if(isMainPage && currentUser) {
+        $("bottomNav").classList.remove("hidden");
+        if(pageId === 'page-home') {
+          $("topbar").classList.remove("hidden");
+        } else {
+          $("topbar").classList.add("hidden");
+        }
+      } else {
+        $("bottomNav").classList.add("hidden");
+        $("topbar").classList.add("hidden");
+      }
+
+      window.scrollTo(0,0);
+      
+      // Keep simple history for back button logic
+      if(navHistory[navHistory.length-1] !== pageId) {
+        navHistory.push(pageId);
+      }
+
+      // Refresh specific pages
+      if(pageId === 'page-home') renderHome();
+      if(pageId === 'page-mylist') renderMyList();
+      if(pageId === 'page-history') renderHistory();
+      if(pageId === 'page-profile') renderProfile();
+      if(pageId === 'page-admin') renderAdmin();
+    };
+
+    window.goBack = (fallback) => {
+      navHistory.pop(); // pop current
+      const prev = navHistory.pop();
+      if(prev) {
+        switchPage(prev);
+      } else {
+        switchPage(fallback);
+      }
+    };
+
+    window.toggleAuth = () => {
+      $("loginBox").classList.toggle("hidden");
+      $("signupBox").classList.toggle("hidden");
+    };
+
+    // AUTH ACTIONS
+    $("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if(!firebaseConfigured) return showToast("Firebase not configured!");
+      showLoading(true);
+      try {
+        await signInWithEmailAndPassword(auth, $("loginEmail").value, $("loginPassword").value);
+        $("loginForm").reset();
+      } catch (err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    });
+
+    $("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if(!firebaseConfigured) return showToast("Firebase not configured!");
+      showLoading(true);
+      try {
+        const name = $("signupName").value;
+        const res = await createUserWithEmailAndPassword(auth, $("signupEmail").value, $("signupPassword").value);
+        await updateProfile(res.user, { displayName: name });
+        // Create user doc
+        await setDoc(doc(db, "users", res.user.uid), {
+          uid: res.user.uid,
+          name: name,
+          email: res.user.email,
+          membership: "free",
+          createdAt: serverTimestamp()
+        });
+        $("signupForm").reset();
+      } catch (err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    });
+
+    window.logout = async () => {
+      if(auth) await signOut(auth);
+    };
+
+    window.handleForgotPassword = async () => {
+      if(!firebaseConfigured) return showToast("Firebase not configured!");
+      let email = $("loginEmail").value.trim();
+      if(!email) {
+        email = prompt("Enter your email address to reset your password:");
+      }
+      if(!email) return showToast("Email is required to reset password.");
+      
+      showLoading(true);
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showToast("Password reset email sent! Please check your inbox.");
+      } catch(err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    };
+
+    // DATA LOADING
+    async function loadData() {
+      if(!firebaseConfigured) {
+        // Dummy data for preview if no firebase
+        dramas = [
+          { id: "d1", title: "Billionaire's Secret Wife", description: "She married the poorest man in the company, little did she know he was the CEO.", category: "Romance", genre: "Billionaire", posterUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80", views: 245000, isHot: true, episodes: [
+            { id: "e1", number: 1, title: "The Blind Date", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", isFree: true },
+            { id: "e2", number: 2, title: "Unexpected Marriage", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", isFree: false }
+          ]},
+          { id: "d2", title: "Revenge of the Abandoned Daughter", description: "Kicked out by her family, she returns 5 years later with immense power.", category: "Action", genre: "Revenge", posterUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&q=80", views: 180000, isHot: false, episodes: [
+            { id: "e3", number: 1, title: "The Return", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", isFree: true }
+          ]}
+        ];
+        return;
+      }
+
+      try {
+        const dSnap = await getDocs(query(collection(db, "dramas"), orderBy("createdAt", "desc")));
+        dramas = [];
+        for(let docSnap of dSnap.docs) {
+          const dData = { id: docSnap.id, ...docSnap.data(), episodes: [] };
+          // Fetch episodes
+          const eSnap = await getDocs(collection(db, "dramas", docSnap.id, "episodes"));
+          eSnap.forEach(eDoc => {
+            dData.episodes.push({ id: eDoc.id, ...eDoc.data() });
+          });
+          dData.episodes.sort((a,b) => a.number - b.number);
+          dramas.push(dData);
+        }
+      } catch (err) {
+        console.warn("Error loading data (likely rules not set):", err);
+      }
+    }
+
+    async function loadUserData() {
+      if(!currentUser || !firebaseConfigured) return;
+      try {
+        // User Profile
+        const uSnap = await getDoc(doc(db, "users", currentUser.uid));
+        if(uSnap.exists()) userProfile = uSnap.data();
+
+        // My List
+        const mSnap = await getDocs(query(collection(db, "myList"), where("userId", "==", currentUser.uid)));
+        myList = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Watch History
+        const hSnap = await getDocs(query(collection(db, "watchHistory"), where("userId", "==", currentUser.uid), orderBy("watchedAt", "desc")));
+        watchHistory = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch(err) {
+        console.warn("Error loading user data (likely rules not set):", err);
+      }
+    }
+
+    // RENDER FUNCTIONS
+    const categories = ["Popular", "New", "Ranking", "Romance", "Action"];
+    
+    window.setCategory = (c) => { currentCategory = c; renderHome(); };
+
+    function renderHome() {
+      const q = $("searchInput").value.toLowerCase();
+      
+      // Render Categories
+      $("categoryTabs").innerHTML = categories.map(c => 
+        `<button class="category-chip ${currentCategory === c ? 'active' : ''}" onclick="setCategory('${c}')">${c}</button>`
+      ).join('');
+
+      let filtered = dramas.filter(d => {
+        const matchQ = q === "" || d.title.toLowerCase().includes(q) || d.genre.toLowerCase().includes(q);
+        if(!matchQ) return false;
+        
+        if(currentCategory === "Popular" || currentCategory === "Ranking") return true; 
+        if(currentCategory === "New") return true; 
+        return d.category === currentCategory || d.genre === currentCategory;
+      });
+
+      if(currentCategory === "Popular" || currentCategory === "Ranking") {
+        filtered.sort((a,b) => (b.views || 0) - (a.views || 0));
+      }
+
+      $("dramaCount").textContent = `${filtered.length} titles`;
+      
+      if(filtered.length === 0) {
+        $("dramaGrid").innerHTML = `<div style="grid-column: 1/-1" class="empty-state"><div class="empty-icon">🎬</div><p>No dramas found</p></div>`;
+      } else {
+        $("dramaGrid").innerHTML = filtered.map(d => `
+          <div class="drama-card" onclick="openDetails('${d.id}')">
+            <div class="poster-box">
+              <img src="${escapeHTML(d.posterUrl)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/600x850/1a1a23/6b7280?text=No+Image'">
+              ${d.isHot ? '<div class="hot-badge">HOT 🔥</div>' : ''}
+            </div>
+            <div class="drama-info">
+              <div class="drama-title">${escapeHTML(d.title)}</div>
+              <div class="drama-meta"><span>${escapeHTML(d.genre)}</span><span>•</span><span>👁 ${(d.views/1000).toFixed(1)}k</span></div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    $("searchInput").addEventListener("input", renderHome);
+
+    window.openDetails = (id) => {
+      activeDramaId = id;
+      const d = dramas.find(x => x.id === id);
+      if(!d) return;
+
+      $("detPoster").src = escapeHTML(d.posterUrl);
+      $("detTitle").textContent = d.title;
+      $("detCategory").textContent = d.category;
+      $("detGenre").textContent = d.genre;
+      $("detViews").textContent = d.views;
+      $("detDesc").textContent = d.description;
+
+      const isInList = myList.some(m => m.dramaId === id);
+      $("btnToggleList").textContent = isInList ? "✓ In List" : "+ Add to List";
+
+      $("epCount").textContent = `${d.episodes.length} episodes`;
+
+      if(d.episodes.length === 0) {
+        $("episodeList").innerHTML = `<div class="empty-state"><p>No episodes yet.</p></div>`;
+      } else {
+        $("episodeList").innerHTML = d.episodes.map(e => `
+          <div class="episode-card" onclick="playEpisode('${e.id}')">
+            <div class="ep-num">${e.number}</div>
+            <div class="ep-info">
+              <div class="ep-title">${escapeHTML(e.title)}</div>
+              <div class="ep-meta ${e.isFree ? 'ep-free' : 'ep-premium'}">${e.isFree ? 'Free' : '💎 Premium'}</div>
+            </div>
+            <div class="ep-play">▶</div>
+          </div>
+        `).join('');
+      }
+
+      switchPage('page-details');
+    };
+
+    window.toggleMyList = async () => {
+      if(!firebaseConfigured) return showToast("Demo mode: Cannot modify list");
+      const d = dramas.find(x => x.id === activeDramaId);
+      if(!d) return;
+
+      const existing = myList.find(m => m.dramaId === d.id);
+      try {
+        if(existing) {
+          await deleteDoc(doc(db, "myList", existing.id));
+          myList = myList.filter(m => m.id !== existing.id);
+          showToast("Removed from My List");
+        } else {
+          const docRef = await addDoc(collection(db, "myList"), {
+            userId: currentUser.uid,
+            dramaId: d.id,
+            createdAt: serverTimestamp()
+          });
+          myList.push({ id: docRef.id, dramaId: d.id, userId: currentUser.uid });
+          showToast("Added to My List");
+        }
+        $("btnToggleList").textContent = existing ? "+ Add to List" : "✓ In List";
+      } catch (err) {
+        showToast(err.message);
+      }
+    };
+
+    window.playFirstEpisode = () => {
+      const d = dramas.find(x => x.id === activeDramaId);
+      if(d && d.episodes.length > 0) {
+        playEpisode(d.episodes[0].id);
+      } else {
+        showToast("No episodes available");
+      }
+    };
+
+    window.playEpisode = async (epId) => {
+      const d = dramas.find(x => x.id === activeDramaId);
+      const e = d?.episodes.find(x => x.id === epId);
+      if(!d || !e) return;
+
+      if(!e.isFree && userProfile.membership !== "premium") {
+        showToast("Requires VIP Membership");
+        switchPage('page-profile');
+        return;
+      }
+
+      activeEpisodeId = epId;
+      $("videoPlayer").src = escapeHTML(e.videoUrl);
+      $("watchTitle").textContent = `${e.number}. ${e.title}`;
+      $("watchDramaName").textContent = d.title;
+
+      // Render Up Next
+      const currentIndex = d.episodes.findIndex(x => x.id === epId);
+      const upNext = d.episodes.slice(currentIndex + 1, currentIndex + 4);
+      
+      $("upNextList").innerHTML = upNext.map(nx => `
+        <div class="episode-card" onclick="playEpisode('${nx.id}')">
+          <div class="ep-num">${nx.number}</div>
+          <div class="ep-info">
+            <div class="ep-title">${escapeHTML(nx.title)}</div>
+            <div class="ep-meta ${nx.isFree ? 'ep-free' : 'ep-premium'}">${nx.isFree ? 'Free' : '💎 Premium'}</div>
+          </div>
+          <div class="ep-play">▶</div>
+        </div>
+      `).join('');
+
+      switchPage('page-watch');
+      $("videoPlayer").play().catch(e=>console.log(e));
+
+      // Record History
+      if(firebaseConfigured) {
+        try {
+          // Increment views
+          await updateDoc(doc(db, "dramas", d.id), { views: increment(1) });
+          // Save history
+          const existingHist = watchHistory.find(h => h.dramaId === d.id && h.episodeId === e.id);
+          if(existingHist) {
+            await updateDoc(doc(db, "watchHistory", existingHist.id), { watchedAt: serverTimestamp() });
+          } else {
+            const hRef = await addDoc(collection(db, "watchHistory"), {
+              userId: currentUser.uid,
+              dramaId: d.id,
+              episodeId: e.id,
+              watchedAt: serverTimestamp()
+            });
+            watchHistory.unshift({ id: hRef.id, dramaId: d.id, episodeId: e.id });
+          }
+        } catch (err) {
+          console.warn("History err (likely rules not set)", err);
+        }
+      }
+    };
+
+    function renderMyList() {
+      const savedDramas = myList.map(m => dramas.find(d => d.id === m.dramaId)).filter(Boolean);
+      if(savedDramas.length === 0) {
+        $("myListGrid").innerHTML = `<div style="grid-column: 1/-1" class="empty-state"><div class="empty-icon">❤️</div><p>Your list is empty</p></div>`;
+      } else {
+        $("myListGrid").innerHTML = savedDramas.map(d => `
+          <div class="drama-card" onclick="openDetails('${d.id}')">
+            <div class="poster-box"><img src="${escapeHTML(d.posterUrl)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/600x850/1a1a23/6b7280?text=No+Image'"></div>
+            <div class="drama-info"><div class="drama-title">${escapeHTML(d.title)}</div></div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderHistory() {
+      // Filter to unique dramas recently watched
+      const uniqueDramaIds = [...new Set(watchHistory.map(h => h.dramaId))];
+      const histDramas = uniqueDramaIds.map(id => dramas.find(d => d.id === id)).filter(Boolean);
+
+      if(histDramas.length === 0) {
+        $("historyGrid").innerHTML = `<div style="grid-column: 1/-1" class="empty-state"><div class="empty-icon">🕘</div><p>No watch history</p></div>`;
+      } else {
+        $("historyGrid").innerHTML = histDramas.map(d => `
+          <div class="drama-card" onclick="openDetails('${d.id}')">
+            <div class="poster-box"><img src="${escapeHTML(d.posterUrl)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/600x850/1a1a23/6b7280?text=No+Image'"></div>
+            <div class="drama-info"><div class="drama-title">${escapeHTML(d.title)}</div></div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderProfile() {
+      if(!currentUser) return;
+      const name = currentUser.displayName || "User";
+      $("profName").textContent = name;
+      $("profEmail").textContent = currentUser.email;
+      $("profAvatar").textContent = name.charAt(0).toUpperCase();
+      
+      $("profMembership").textContent = userProfile.membership === "premium" ? "VIP" : "Free";
+      $("profMembership").style.color = userProfile.membership === "premium" ? "var(--pink)" : "white";
+
+      if(currentUser.email === ADMIN_EMAIL) {
+        $("btnAdminPanel").classList.remove("hidden");
+      } else {
+        $("btnAdminPanel").classList.add("hidden");
+      }
+    }
+
+    window.activateMembershipDemo = async () => {
+      if(!firebaseConfigured) return showToast("Demo mode active");
+      showLoading(true);
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), { membership: "premium" });
+        userProfile.membership = "premium";
+        renderProfile();
+        showToast("VIP Activated!");
+      } catch (err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    };
+
+    // ADMIN FUNCTIONS
+    function renderAdmin() {
+      // Populate select
+      $("aeDramaId").innerHTML = dramas.map(d => `<option value="${d.id}">${escapeHTML(d.title)}</option>`).join('');
+      
+      // Populate list
+      if(dramas.length === 0) {
+        $("adminCatalogList").innerHTML = `<div class="empty-state">No dramas in catalog</div>`;
+      } else {
+        $("adminCatalogList").innerHTML = dramas.map(d => `
+          <div class="admin-list-item" style="flex-direction: column; align-items: stretch;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <img src="${escapeHTML(d.posterUrl)}" style="width: 45px; height: 65px; border-radius: 8px; object-fit: cover;" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/600x850/1a1a23/6b7280?text=No+Image'">
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${escapeHTML(d.title)}</div>
+                <div style="font-size:11px; color:var(--muted);">${d.episodes.length} Episodes • 👁 ${d.views}</div>
+              </div>
+              <button class="btn-danger" onclick="deleteDrama('${d.id}')">Delete Drama</button>
+            </div>
+            <div style="margin-top: 10px; padding-left: 10px; border-left: 2px solid rgba(255,255,255,0.05);">
+              ${d.episodes.map(e => `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                  <span style="font-size:12px; color:#ddd;">Ep ${e.number}: ${escapeHTML(e.title)}</span>
+                  <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteEpisode('${d.id}', '${e.id}')">Delete</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    $("formAddDrama").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if(!firebaseConfigured) return;
+      showLoading(true);
+      try {
+        await addDoc(collection(db, "dramas"), {
+          title: $("aTitle").value,
+          description: $("aDesc").value,
+          category: $("aCat").value,
+          genre: $("aGenre").value,
+          posterUrl: $("aPoster").value,
+          views: parseInt($("aViews").value) || 0,
+          isHot: $("aHot").checked,
+          createdAt: serverTimestamp()
+        });
+        showToast("Drama added!");
+        $("formAddDrama").reset();
+        await loadData();
+        renderAdmin();
+      } catch (err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    });
+
+    $("formAddEpisode").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if(!firebaseConfigured) return;
+      showLoading(true);
+      try {
+        const dId = $("aeDramaId").value;
+        await addDoc(collection(db, "dramas", dId, "episodes"), {
+          number: parseInt($("aeNum").value),
+          title: $("aeTitle").value,
+          videoUrl: $("aeVideo").value,
+          isFree: $("aeFree").checked,
+          createdAt: serverTimestamp()
+        });
+        showToast("Episode added!");
+        $("formAddEpisode").reset();
+        await loadData();
+        renderAdmin();
+      } catch (err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    });
+
+    window.deleteDrama = async (dId) => {
+      if(!confirm("Delete drama and ALL its episodes?")) return;
+      if(!firebaseConfigured) return;
+      showLoading(true);
+      try {
+        // Delete episodes first (simple manual cascade)
+        const eSnap = await getDocs(collection(db, "dramas", dId, "episodes"));
+        for(let e of eSnap.docs) {
+          await deleteDoc(doc(db, "dramas", dId, "episodes", e.id));
+        }
+        await deleteDoc(doc(db, "dramas", dId));
+        showToast("Drama deleted");
+        await loadData();
+        renderAdmin();
+      } catch(err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    };
+
+    window.deleteEpisode = async (dId, epId) => {
+      if(!confirm("Delete this episode?")) return;
+      if(!firebaseConfigured) return;
+      showLoading(true);
+      try {
+        await deleteDoc(doc(db, "dramas", dId, "episodes", epId));
+        showToast("Episode deleted");
+        await loadData();
+        renderAdmin();
+      } catch(err) {
+        showToast(err.message);
+      }
+      showLoading(false);
+    };
+
+    // INIT
+    if (firebaseConfigured) {
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if(user) {
+          await loadData();
+          await loadUserData();
+          
+          const splash = $("splash");
+          if(splash && !splash.classList.contains("hide")) {
+            setTimeout(() => {
+              splash.classList.add("hide");
+              switchPage('page-home');
+            }, 1000);
+          } else {
+            if(document.querySelector('.page.active').id === 'page-auth') {
+               switchPage('page-home');
+            }
+          }
+        } else {
+          $("splash").classList.add("hide");
+          switchPage('page-auth');
+        }
+      });
+    } else {
+      // Demo mode
+      $("splash").classList.add("hide");
+      loadData().then(() => switchPage('page-home'));
+      showToast("Running in Demo Mode (No Firebase)");
+    }
+
+    // Stop video when leaving watch page
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.id === 'page-watch' && !mutation.target.classList.contains('active')) {
+          const v = $("videoPlayer");
+          if(v) v.pause();
+        }
+      });
+    });
+    observer.observe($("page-watch"), { attributes: true, attributeFilter: ['class'] });
+
+  </script>
+</body>
+</html>

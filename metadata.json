@@ -1,0 +1,6 @@
+{
+  "name": "Masti TV Drama",
+  "description": "Mobile-first short drama streaming web app with Firebase Auth and Firestore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
