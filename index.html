@@ -137,6 +137,27 @@
     
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+    /* NEW SETTINGS & ROWS */
+    .row { display: flex; align-items: center; gap: 15px; padding: 18px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); min-height: 70px; cursor: pointer; }
+    .icon { width: 28px; text-align: center; font-size: 22px; }
+    .row-main { flex: 1; }
+    .row-title { font-size: 14px; font-weight: 800; }
+    .row-sub { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+    .chev { font-size: 20px; color: #aaa; }
+    .version { color: var(--pink); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9000; display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: 0.3s; }
+    .modal.show { opacity: 1; visibility: visible; }
+    .sheet { width: 100%; max-width: 600px; margin: 0 auto; max-height: 90vh; overflow-y: auto; background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: 0.3s; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+    .modal.show .sheet { transform: translateY(0); }
+    .sheet h2 { margin: 0 0 20px; font-size: 20px; font-weight: 900; font-style: italic; text-transform: uppercase; }
+    .close { float: right; font-size: 24px; color: var(--muted); }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; margin-bottom: 24px; }
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .admin-card-stat { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; }
+    .admin-card-stat b { font-size: 28px; font-weight: 900; font-style: italic; color: white; }
+    .admin-card-stat span { color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -334,10 +355,20 @@
             <li>✓ Support the creators</li>
           </ul>
           <button class="btn-primary" onclick="activateMembershipDemo()">Activate Demo VIP</button>
-          <p style="font-size:10px; color:#999; margin-top:10px;">(This is a demo, no real payment)</p>
         </div>
 
-        <button id="btnAdminPanel" class="btn-secondary hidden" style="margin-bottom:15px; color:#ffca28;" onclick="switchPage('page-admin')">⚙️ Open Admin Panel</button>
+        <div class="settings-list" style="margin-bottom: 20px;">
+          <div class="row" onclick="handleMenu('player')"><div class="icon">⚙</div><div class="row-main"><div class="row-title">Video player settings</div><div class="row-sub">Playback, quality & autoplay</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('share')"><div class="icon">↗</div><div class="row-main"><div class="row-title">Share the App</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('transactions')"><div class="icon">🧾</div><div class="row-main"><div class="row-title">Transaction History</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('privacy')"><div class="icon">🛡</div><div class="row-main"><div class="row-title">Privacy Policy</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('terms')"><div class="icon">📄</div><div class="row-main"><div class="row-title">Terms & Conditions</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('contact')"><div class="icon">✉</div><div class="row-main"><div class="row-title">Contact Us</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('subscription')"><div class="icon">♕</div><div class="row-main"><div class="row-title">Subscription Settings</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="handleMenu('about')"><div class="icon">ⓘ</div><div class="row-main"><div class="row-title">About Us</div></div><span class="version" id="appVersionUI">V1.0.0</span></div>
+          <div id="btnAdminPanel" class="row hidden" onclick="switchPage('page-admin')"><div class="icon">🔐</div><div class="row-main"><div class="row-title" style="color:var(--pink)">Admin Panel</div><div class="row-sub">All Update Controller</div></div><div class="chev">›</div></div>
+        </div>
+
         <button class="btn-secondary" style="background: rgba(255,255,255,0.05);" onclick="logout()">Sign Out</button>
       </div>
     </section>
@@ -348,6 +379,25 @@
         <button class="btn-secondary" style="width: auto; padding: 10px 15px; margin-bottom: 20px;" onclick="goBack('page-profile')">← Back to Profile</button>
         
         <div class="section-title"><h2>Admin Panel</h2></div>
+        
+        <div class="admin-grid">
+          <div class="admin-card-stat"><b id="statUsers">0</b><span>Users</span></div>
+          <div class="admin-card-stat"><b id="statDramas">0</b><span>Dramas</span></div>
+          <div class="admin-card-stat"><b id="statEpisodes">0</b><span>Episodes</span></div>
+          <div class="admin-card-stat"><b id="statPlans">0</b><span>Plans</span></div>
+        </div>
+        
+        <div class="section-title"><h2>All Update Controller</h2></div>
+        <div class="actions">
+          <button class="btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openSettings()">App Settings</button>
+          <button class="btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openPolicyEditor('privacyPolicy')">Privacy Policy</button>
+          <button class="btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openPolicyEditor('termsConditions')">Terms</button>
+          <button class="btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openContactEditor()">Contact</button>
+          <button class="btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openUpdate()">App Update</button>
+          <button class="btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openMaintenance()">Maintenance</button>
+        </div>
+        
+        <div class="section-title"><h2>Content Controller</h2></div>
         
         <div class="admin-card">
           <h3 style="margin-bottom:15px;">Add New Drama</h3>
@@ -419,6 +469,14 @@
       </div>
     </section>
 
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+      <div class="sheet">
+        <button class="close" onclick="closeModal()">×</button>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
     <!-- BOTTOM NAV -->
     <nav id="bottomNav" class="bottom-nav hidden">
       <div class="nav-item active" onclick="switchPage('page-home')" id="nav-page-home">
@@ -486,11 +544,27 @@
     let activeDramaId = null;
     let activeEpisodeId = null;
     let navHistory = [];
+    let appSettings = {
+      appName: "MASTI TV", appVersion: "1.0.0", minimumVersion: "1.0.0",
+      forceUpdate: false, updateUrl: "", appShareUrl: location.href,
+      appDescription: "Watch amazing short dramas on Masti TV.",
+      privacyPolicy: "Your privacy policy goes here.", termsConditions: "Your terms and conditions go here.",
+      maintenanceMode: false, maintenanceMessage: "Masti TV is temporarily under maintenance."
+    };
+    let contactSettings = { email: "support@example.com", phone: "", whatsapp: "", telegram: "", website: "" };
 
     // DOM UTILS
     const $ = id => document.getElementById(id);
     const showLoading = (show) => $("loader").style.display = show ? "grid" : "none";
     const escapeHTML = (str) => String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+    
+    window.closeModal = () => { $("modal").classList.remove("show"); };
+    window.openModal = (html) => { $("modalBody").innerHTML = html; $("modal").classList.add("show"); };
+    
+    const checkInput = (id, label, val) => `<div class="form-group"><label class="form-label">${label}</label><input type="text" id="${id}" class="form-input" value="${escapeHTML(val)}"></div>`;
+    const checkTextarea = (id, label, val) => `<div class="form-group"><label class="form-label">${label}</label><textarea id="${id}" class="form-input" style="height:120px;">${escapeHTML(val)}</textarea></div>`;
+    const checkToggle = (id, label, checked) => `<div class="form-group" style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="${id}" ${checked ? "checked" : ""} style="width:18px;height:18px;"><label class="form-label" style="margin:0;">${label}</label></div>`;
+    const val = (id) => $(id)?.value || "";
     
     window.showToast = (msg) => {
       const t = $("toast");
@@ -631,6 +705,28 @@
       }
 
       try {
+        const sSnap = await getDoc(doc(db, "settings", "app"));
+        if(sSnap.exists()) appSettings = { ...appSettings, ...sSnap.data() };
+        
+        const cSnap = await getDoc(doc(db, "settings", "contact"));
+        if(cSnap.exists()) contactSettings = { ...contactSettings, ...cSnap.data() };
+
+        if(appSettings.maintenanceMode && currentUser?.email !== ADMIN_EMAIL) {
+          const d = document.createElement("div");
+          d.style="position:fixed;inset:0;background:var(--bg);z-index:99999;display:grid;place-items:center;text-align:center;padding:30px";
+          d.innerHTML=`<div><div style="font-size:50px;margin-bottom:20px;">🛠️</div><h1 style="font-size:24px;font-weight:900;font-style:italic;text-transform:uppercase;">We'll be back soon</h1><p style="color:var(--muted);margin-top:10px;">${escapeHTML(appSettings.maintenanceMessage)}</p></div>`;
+          document.body.appendChild(d);
+        }
+
+        const brandEls = document.querySelectorAll(".brand");
+        brandEls.forEach(b => {
+          if (b.childNodes.length > 1) {
+            b.lastChild.textContent = " " + appSettings.appName;
+          }
+        });
+        const vEl = $("appVersionUI");
+        if(vEl) vEl.textContent = "V" + appSettings.appVersion;
+        
         const dSnap = await getDocs(query(collection(db, "dramas"), orderBy("createdAt", "desc")));
         dramas = [];
         for(let docSnap of dSnap.docs) {
@@ -906,7 +1002,21 @@
     };
 
     // ADMIN FUNCTIONS
-    function renderAdmin() {
+    async function renderAdmin() {
+      // Update Stats
+      if (db) {
+        try {
+          const uSnap = await getDocs(collection(db, "users"));
+          $("statUsers").textContent = uSnap.size;
+          $("statDramas").textContent = dramas.length;
+          const totalEp = dramas.reduce((acc, d) => acc + d.episodes.length, 0);
+          $("statEpisodes").textContent = totalEp;
+          $("statPlans").textContent = 2; // Assuming Free and Premium
+        } catch(err) {
+          console.warn("Stats read failed", err);
+        }
+      }
+
       // Populate select
       $("aeDramaId").innerHTML = dramas.map(d => `<option value="${d.id}">${escapeHTML(d.title)}</option>`).join('');
       
@@ -1061,6 +1171,46 @@
       });
     });
     observer.observe($("page-watch"), { attributes: true, attributeFilter: ['class'] });
+
+    // MENUS & MODALS LOGIC
+    window.handleMenu = (action) => {
+      if(action === 'share') shareApp();
+      else if(action === 'privacy') openPolicy('privacyPolicy');
+      else if(action === 'terms') openPolicy('termsConditions');
+      else if(action === 'about') openAbout();
+      else if(action === 'contact') openContact();
+      else if(action === 'player') openPlayer();
+      else if(action === 'transactions') openTransactions();
+      else if(action === 'subscription') openSubscription();
+    };
+
+    window.shareApp = async () => {
+      const data = { title: appSettings.appName, text: appSettings.appDescription, url: appSettings.appShareUrl || location.href };
+      try { if (navigator.share) await navigator.share(data); else { await navigator.clipboard.writeText(data.url); showToast("App link copied"); } } catch (e) {}
+    };
+    window.openPolicy = (field) => openModal(`<h2>${field === "privacyPolicy" ? "Privacy Policy" : "Terms & Conditions"}</h2><div style="white-space:pre-wrap;color:#ccc;line-height:1.7; font-size:13px;">${escapeHTML(appSettings[field] || "Content not available.")}</div>`);
+    window.openAbout = () => openModal(`<h2>About Masti TV</h2><p style="color:#bbb;line-height:1.7">${escapeHTML(appSettings.appDescription)}</p><p style="margin-top:10px;">Version: <b style="color:var(--pink)">V${escapeHTML(appSettings.appVersion)}</b></p>`);
+    window.openContact = () => openModal(`<h2>Contact Us</h2><p style="margin-bottom:10px;">Email: ${escapeHTML(contactSettings.email)}</p><p style="margin-bottom:15px;">Phone: ${escapeHTML(contactSettings.phone)}</p><div class="actions">${contactSettings.email ? `<a class="btn-primary" style="text-align:center;text-decoration:none;" href="mailto:${escapeHTML(contactSettings.email)}">Email</a>` : ""}${contactSettings.whatsapp ? `<a class="btn-primary" style="text-align:center;text-decoration:none;" href="https://wa.me/${escapeHTML(contactSettings.whatsapp)}">WhatsApp</a>` : ""}${contactSettings.telegram ? `<a class="btn-primary" style="text-align:center;text-decoration:none;" href="https://t.me/${escapeHTML(contactSettings.telegram)}">Telegram</a>` : ""}</div>`);
+
+    window.openPlayer = () => openModal(`<h2>Video Player Settings</h2>${checkToggle("autoplay", "Autoplay", false)}${checkToggle("dataSaver", "Data saver", false)}<button class="btn-primary" style="margin-top:15px" onclick="closeModal(); showToast('Player settings saved')">Save Settings</button>`);
+    window.openTransactions = async () => openModal(`<h2>Transaction History</h2><div class="empty-state">No transactions found.</div>`);
+    window.openSubscription = async () => openModal(`<h2>Subscription Settings</h2><div class="empty-state">No active plans.</div>`);
+
+    // Admin Edit modals
+    window.openSettings = () => openModal(`<h2>App Settings</h2>${checkInput("appName","App Name",appSettings.appName)}${checkInput("appVersion","App Version",appSettings.appVersion)}${checkInput("minimumVersion","Minimum Version",appSettings.minimumVersion)}${checkInput("appShareUrl","Share URL",appSettings.appShareUrl||"")}${checkInput("updateUrl","Update URL",appSettings.updateUrl||"")}${checkToggle("forceUpdate", "Force Update", appSettings.forceUpdate)}${checkTextarea("appDescription","Description",appSettings.appDescription)}<button class="btn-primary" onclick="saveAppSettings()">Save</button>`);
+    window.saveAppSettings = async () => { Object.assign(appSettings, { appName: val("appName"), appVersion: val("appVersion"), minimumVersion: val("minimumVersion"), appShareUrl: val("appShareUrl"), updateUrl: val("updateUrl"), forceUpdate: $("forceUpdate")?.checked, appDescription: val("appDescription") }); if (db) await setDoc(doc(db,"settings","app"), appSettings, {merge:true}); closeModal(); showToast("App settings updated"); $("appVersionUI").textContent = "V"+appSettings.appVersion; };
+
+    window.openPolicyEditor = (field) => openModal(`<h2>${field === "privacyPolicy" ? "Privacy Policy" : "Terms & Conditions"}</h2>${checkTextarea(field, field === "privacyPolicy" ? "Privacy Policy" : "Terms & Conditions", appSettings[field])}<button class="btn-primary" onclick="saveText('${field}')">Save</button>`);
+    window.saveText = async (field) => { appSettings[field] = val(field); if (db) await setDoc(doc(db,"settings","app"), { [field]: appSettings[field] }, {merge:true}); closeModal(); showToast("Updated successfully"); };
+
+    window.openContactEditor = () => openModal(`<h2>Contact Settings</h2>${checkInput("email","Email",contactSettings.email)}${checkInput("phone","Phone",contactSettings.phone)}${checkInput("whatsapp","WhatsApp number",contactSettings.whatsapp)}${checkInput("telegram","Telegram username",contactSettings.telegram)}${checkInput("website","Website",contactSettings.website)}<button class="btn-primary" onclick="saveContact()">Save</button>`);
+    window.saveContact = async () => { Object.assign(contactSettings, { email: val("email"), phone: val("phone"), whatsapp: val("whatsapp"), telegram: val("telegram"), website: val("website") }); if (db) await setDoc(doc(db,"settings","contact"), contactSettings, {merge:true}); closeModal(); showToast("Contact settings updated"); };
+
+    window.openUpdate = () => openModal(`<h2>App Update Controller</h2>${checkInput("latestVersion","Latest Version",appSettings.appVersion)}${checkInput("minimumVersion","Minimum Version",appSettings.minimumVersion)}${checkInput("updateUrl","Update URL",appSettings.updateUrl)}${checkTextarea("updateMessage","Update Message","A new version of Masti TV is available.")}<button class="btn-primary" onclick="saveUpdate()">Save</button>`);
+    window.saveUpdate = async () => { appSettings.appVersion = val("latestVersion"); appSettings.minimumVersion = val("minimumVersion"); appSettings.updateUrl = val("updateUrl"); appSettings.updateMessage = val("updateMessage"); if (db) await setDoc(doc(db,"settings","app"), appSettings, {merge:true}); closeModal(); showToast("Update controller saved"); $("appVersionUI").textContent = "V"+appSettings.appVersion; };
+
+    window.openMaintenance = () => openModal(`<h2>Maintenance Mode</h2>${checkToggle("maintenanceMode", "Enable maintenance", appSettings.maintenanceMode)}${checkTextarea("maintenanceMessage","Message",appSettings.maintenanceMessage)}<button class="btn-primary" style="margin-top:15px" onclick="saveMaintenance()">Save</button>`);
+    window.saveMaintenance = async () => { appSettings.maintenanceMode = $("maintenanceMode")?.checked; appSettings.maintenanceMessage = val("maintenanceMessage"); if (db) await setDoc(doc(db,"settings","app"), { maintenanceMode: appSettings.maintenanceMode, maintenanceMessage: appSettings.maintenanceMessage }, {merge:true}); closeModal(); showToast("Maintenance settings saved"); };
 
   </script>
 </body>
